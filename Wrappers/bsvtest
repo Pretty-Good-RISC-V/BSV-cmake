@@ -5,6 +5,8 @@
 #
 set -e
 
+export INSTRUCTION_LOG_FILENAME="$1_trace.txt"
+
 RESULT=$($1 -m 5000)
 echo "$RESULT" > "$1_output.txt"
 if [[ ! $RESULT =~ "    PASS" ]]; then
