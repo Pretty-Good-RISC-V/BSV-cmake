@@ -7,8 +7,44 @@ set -e
 
 export INSTRUCTION_LOG_FILENAME="$1_trace.txt"
 
-RESULT=$($1 -m 5000)
-echo "$RESULT" > "$1_output.txt"
+COMPARE_WITH=""
+MAX_CYCLES=5000
+POSITIONAL=()
+
+while [[ $# -gt 0 ]]; do
+    key="$1"
+
+    case $key in
+        --compare_with)
+            COMPARE_WITH="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        --max_cycles)
+            MAX_CYCLES=$2
+            shift # past argument
+            shift # past value
+            ;;
+        *)  # unknown option
+            POSITIONAL+=("$1")
+            shift # past argument
+            ;;
+    esac
+done
+
+TEST_BINARY=${POSITIONAL[0]}
+
+RESULT=$($TEST_BINARY -m $MAX_CYCLES)
+echo "$RESULT" > "$TEST_BINARY_output.txt"
+
+if [[ "$COMPARE_WITH" != "" ]]; then
+    DIFF=$(diff "$TEST_BINARY_output.txt" "$COMPARE_WITH")
+    if [[ "$DIFF" != "" ]]; then
+        echo ">>>>> FAILED: difference failed"
+        exit 1
+    fi
+fi
+
 if [[ ! $RESULT =~ "    PASS" ]]; then
     echo ">>>>> FAILED: $RESULT"
     exit 1
